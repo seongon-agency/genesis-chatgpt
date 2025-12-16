@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\Users\\User\\Desktop\\genesis-chatgpt\" /b)",
+      "Bash(dir:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx playwright install chromium)"
+    ]
+  }
+}
