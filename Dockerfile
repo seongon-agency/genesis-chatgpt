@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Ensure public folder exists
+RUN mkdir -p public
+
 # Build Next.js
 RUN npm run build
 
@@ -52,6 +55,8 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built files from builder
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
+
+# Copy public folder
 COPY --from=builder /app/public ./public
 
 # Install Playwright and browsers in production
