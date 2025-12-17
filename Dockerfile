@@ -3,19 +3,10 @@ FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
-
-# Copy source code
 COPY . .
-
-# Ensure public folder exists
 RUN mkdir -p public
-
-# Build Next.js
 RUN npm run build
 
 # Production stage
@@ -25,6 +16,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PLAYWRIGHT_BROWSERS_PATH=/app/.cache/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 
 # Install dependencies for Playwright browsers
 RUN apt-get update && apt-get install -y \
@@ -42,10 +34,18 @@ RUN apt-get update && apt-get install -y \
     libxfixes3 \
     libxrandr2 \
     libgbm1 \
-    libasound2 \
+    libasound2t64 \
     libpango-1.0-0 \
     libcairo2 \
+    libx11-6 \
+    libx11-xcb1 \
+    libxcb1 \
+    libxext6 \
+    libxshmfence1 \
     fonts-liberation \
+    fonts-noto-color-emoji \
+    ca-certificates \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
@@ -55,17 +55,14 @@ RUN adduser --system --uid 1001 nextjs
 # Copy built files from builder
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
-
-# Copy public folder
 COPY --from=builder /app/public ./public
 
-# Install Playwright and browsers in production
+# Install Playwright and browsers
 COPY package*.json ./
-RUN npm ci --only=production
-RUN npx playwright install chromium
-
-# Set permissions
-RUN chown -R nextjs:nodejs /app
+RUN npm ci --only=production \
+    && npx playwright install chromium \
+    && npx playwright install-deps chromium \
+    && chown -R nextjs:nodejs /app
 
 USER nextjs
 
